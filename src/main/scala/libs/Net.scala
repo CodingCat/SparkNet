@@ -92,12 +92,14 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
   }
 
   def train(numSteps: Int) = {
-    library.set_mode_gpu()
+    //library.set_mode_gpu()
+    library.set_mode_cpu()
     library.solver_step(state, numSteps)
   }
 
   def test(): Array[Float] = {
-    library.set_mode_gpu()
+    //library.set_mode_gpu()
+    library.set_mode_cpu()
     assert(!numTestBatches.isEmpty)
     library.solver_test(state, numTestBatches.get) // you must run this before running library.num_test_scores(state)
     val numTestScores = library.num_test_scores(state)
