@@ -13,8 +13,6 @@ libraryDependencies += "net.java.dev.jna" % "jna" % "4.2.1"
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
 
-libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.10.21"
-
 libraryDependencies += "net.coobird" % "thumbnailator" % "0.4.2"
 
 libraryDependencies ++= Seq("com.twelvemonkeys.imageio" % "imageio" % "3.1.2",
