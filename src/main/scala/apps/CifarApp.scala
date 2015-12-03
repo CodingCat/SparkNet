@@ -21,7 +21,7 @@ object CifarApp {
   val size = imShape.product
 
   // initialize nets on workers
-  val sparkNetHome = sys.env("SPARKNET_HOME")
+  val sparkNetHome = "/home/zhunan/code/SparkNet"
   System.load(sparkNetHome + "/build/libccaffe.so")
   var netParameter = ProtoLoader.loadNetPrototxt(sparkNetHome + "/caffe/examples/cifar10/cifar10_full_train_test.prototxt")
   netParameter = ProtoLoader.replaceDataLayers(netParameter, trainBatchSize, testBatchSize, channels, height, width)
