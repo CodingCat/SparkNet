@@ -8,7 +8,7 @@ class MinibatchSamplerSpec extends FlatSpec {
     }
   )
 
-  var sampler = new MinibatchSampler(minibatches.iterator, minibatches.length, 5)
+  var sampler = new MiniBatchSampler(minibatches.iterator, minibatches.length, 5)
   for (i <- 0 to 4) {
     var imageMinibatch = sampler.nextImageMinibatch()
     var labelMinibatch = sampler.nextLabelMinibatch()
@@ -16,7 +16,7 @@ class MinibatchSamplerSpec extends FlatSpec {
     assert(labelMinibatch(0) == sampler.indices(i))
   }
 
-  sampler = new MinibatchSampler(minibatches.iterator, minibatches.length, 10)
+  sampler = new MiniBatchSampler(minibatches.iterator, minibatches.length, 10)
   for (i <- 0 to 9) {
     var labelMinibatch = sampler.nextLabelMinibatch()
     var imageMinibatch = sampler.nextImageMinibatch()
@@ -25,7 +25,7 @@ class MinibatchSamplerSpec extends FlatSpec {
   }
 
   val r = scala.util.Random
-  sampler = new MinibatchSampler(minibatches.iterator, minibatches.length, 100)
+  sampler = new MiniBatchSampler(minibatches.iterator, minibatches.length, 100)
   for (i <- 0 to 99) {
     var (imageMinibatch, labelMinibatch) = {
       if (r.nextBoolean) {

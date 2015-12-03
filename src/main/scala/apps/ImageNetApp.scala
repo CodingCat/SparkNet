@@ -129,7 +129,7 @@ object ImageNetApp {
                 row += 1
               }
             }
-            val minibatchSampler = new MinibatchSampler(testMinibatchIt, len, len)
+            val minibatchSampler = new MiniBatchSampler(testMinibatchIt, len, len)
             net.setTestData(minibatchSampler, len, Some(imageNetTestPreprocessing))
             Array(net.test()).iterator // do testing
           }
@@ -167,7 +167,7 @@ object ImageNetApp {
               row += 1
             }
           }
-          val minibatchSampler = new MinibatchSampler(trainMinibatchIt, len, syncInterval)
+          val minibatchSampler = new MiniBatchSampler(trainMinibatchIt, len, syncInterval)
           net.setTrainData(minibatchSampler, Some(imageNetTrainPreprocessing))
           net.train(syncInterval) // train for syncInterval minibatches
           Array(0).iterator // give the closure the right signature

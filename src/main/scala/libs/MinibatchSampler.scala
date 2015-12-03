@@ -1,6 +1,6 @@
 package libs
 
-class MinibatchSampler(minibatchIt: Iterator[(Array[ByteImage], Array[Int])], totalNumBatches: Int, numSampledBatches: Int) {
+class MiniBatchSampler(minibatchIt: Iterator[(Array[ByteImage], Array[Int])], totalNumBatches: Int, numSampledBatches: Int) {
   // The purpose of this method is to take minibatchIt, which is an iterator
   // over images and labels, and to turn it into two iterators, one over images
   // and one over labels. The iterator over images is used to create a callback

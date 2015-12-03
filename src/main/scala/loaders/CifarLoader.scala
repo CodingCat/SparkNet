@@ -8,7 +8,8 @@ import scala.util.Random
 import libs._
 
 /**
- * Loads images from the CIFAR-10 Dataset. The string path points to a directory where the files data_batch_1.bin, etc. are stored.
+ * Loads images from the CIFAR-10 Dataset. The string path points to a directory where the files data_batch_1.bin, etc.
+ * are stored.
  *
  * TODO: Implement loading of test images, and distinguish between training and test data
  */

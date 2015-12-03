@@ -47,9 +47,9 @@ object WeightCollection extends java.io.Serializable {
 }
 
 trait Net {
-  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None)
+  def setTrainData(minibatchSampler: MiniBatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None)
 
-  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None)
+  def setTestData(minibatchSampler: MiniBatchSampler, len: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None)
 
   def train(numSteps: Int)
 
@@ -76,14 +76,14 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
 
   var numTestBatches = None: Option[Int]
 
-  def setTrainData(minibatchSampler: MinibatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
+  def setTrainData(minibatchSampler: MiniBatchSampler, trainPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
     imageTrainCallback = Some(makeImageCallback(minibatchSampler, trainPreprocessing))
     labelTrainCallback = Some(makeLabelCallback(minibatchSampler))
     library.set_train_data_callback(state, 0, imageTrainCallback.get)
     library.set_train_data_callback(state, 1, labelTrainCallback.get)
   }
 
-  def setTestData(minibatchSampler: MinibatchSampler, len: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
+  def setTestData(minibatchSampler: MiniBatchSampler, len: Int, testPreprocessing: Option[(ByteImage, Array[Float]) => Unit] = None) = {
     numTestBatches = Some(len)
     imageTestCallback = Some(makeImageCallback(minibatchSampler, testPreprocessing))
     labelTestCallback = Some(makeLabelCallback(minibatchSampler))
@@ -153,7 +153,7 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
     return new WeightCollection(allWeights, layerNames)
   }
 
-  private def makeImageCallback(minibatchSampler: MinibatchSampler, preprocessing: Option[(ByteImage, Array[Float]) => Unit] = None): CaffeLibrary.java_callback_t = {
+  private def makeImageCallback(minibatchSampler: MiniBatchSampler, preprocessing: Option[(ByteImage, Array[Float]) => Unit] = None): CaffeLibrary.java_callback_t = {
     return new CaffeLibrary.java_callback_t() {
       def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
         val currentImageBatch = minibatchSampler.nextImageMinibatch()
@@ -182,7 +182,7 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
     }
   }
 
-  def makeLabelCallback(minibatchSampler: MinibatchSampler): CaffeLibrary.java_callback_t = {
+  def makeLabelCallback(minibatchSampler: MiniBatchSampler): CaffeLibrary.java_callback_t = {
     return new CaffeLibrary.java_callback_t {
       def invoke(data: Pointer, batchSize: Int, numDims: Int, shape: Pointer) {
         val currentLabelBatch = minibatchSampler.nextLabelMinibatch()

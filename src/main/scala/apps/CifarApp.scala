@@ -64,67 +64,72 @@ object CifarApp {
     testRDD = testRDD.repartition(numWorkers)
 
     log("processing train data")
+    // we are training the mini batches in parallel
     val trainConverter = new ScaleAndConvert(trainBatchSize, height, width)
-    var trainMinibatchRDD = trainConverter.makeMinibatchRDDWithoutCompression(trainRDD).persist()
-    val numTrainMinibatches = trainMinibatchRDD.count()
-    log("numTrainMinibatches = " + numTrainMinibatches.toString)
+    val trainMiniBatchRDD = trainConverter.makeMiniBatchRDDWithoutCompression(trainRDD).persist()
+    val numTrainMiniBatches = trainMiniBatchRDD.count()
+    log("numTrainMinibatches = " + numTrainMiniBatches.toString)
 
     log("processing test data")
     val testConverter = new ScaleAndConvert(testBatchSize, height, width)
-    var testMinibatchRDD = testConverter.makeMinibatchRDDWithoutCompression(testRDD).persist()
-    val numTestMinibatches = testMinibatchRDD.count()
-    log("numTestMinibatches = " + numTestMinibatches.toString)
+    val testMiniBatchRDD = testConverter.makeMiniBatchRDDWithoutCompression(testRDD).persist()
+    val numTestMiniBatches = testMiniBatchRDD.count()
+    log("numTestMinibatches = " + numTestMiniBatches.toString)
 
-    val numTrainData = numTrainMinibatches * trainBatchSize
-    val numTestData = numTestMinibatches * testBatchSize
+    // total number of data entries
+    val numTrainData = numTrainMiniBatches * trainBatchSize
+    val numTestData = numTestMiniBatches * testBatchSize
 
-    val trainPartitionSizes = trainMinibatchRDD.mapPartitions(iter => Array(iter.size).iterator).persist()
-    val testPartitionSizes = testMinibatchRDD.mapPartitions(iter => Array(iter.size).iterator).persist()
+    val trainPartitionSizes = trainMiniBatchRDD.mapPartitions(iter => Array(iter.size).iterator).persist()
+    val testPartitionSizes = testMiniBatchRDD.mapPartitions(iter => Array(iter.size).iterator).persist()
     log("trainPartitionSizes = " + trainPartitionSizes.collect().deep.toString)
     log("testPartitionSizes = " + testPartitionSizes.collect().deep.toString)
 
-    val workers = sc.parallelize(Array.range(0, numWorkers), numWorkers)
+    //how many partitions we have, for each partition we train an independent net
+    val partitions = sc.parallelize(Array.range(0, numWorkers), numWorkers)
 
     var i = 0
     while (true) {
       log("broadcasting weights", i)
       val broadcastWeights = sc.broadcast(netWeights)
       log("setting weights on workers", i)
-      workers.foreach(_ => net.setWeights(broadcastWeights.value))
+      partitions.foreach(_ => net.setWeights(broadcastWeights.value))
 
       if (i % 10 == 0) {
         log("testing, i")
-        val testScores = testPartitionSizes.zipPartitions(testMinibatchRDD) (
+        val testScores = testPartitionSizes.zipPartitions(testMiniBatchRDD) (
           (lenIt, testMinibatchIt) => {
             assert(lenIt.hasNext && testMinibatchIt.hasNext)
             val len = lenIt.next
             assert(!lenIt.hasNext)
-            val minibatchSampler = new MinibatchSampler(testMinibatchIt, len, len)
+            val minibatchSampler = new MiniBatchSampler(testMinibatchIt, len, len)
             net.setTestData(minibatchSampler, len, None)
             Array(net.test()).iterator // do testing
           }
         ).cache()
         val testScoresAggregate = testScores.reduce((a, b) => (a, b).zipped.map(_ + _))
-        val accuracies = testScoresAggregate.map(v => 100F * v / numTestMinibatches)
+        val accuracies = testScoresAggregate.map(v => 100F * v / numTestMiniBatches)
         log("%.2f".format(accuracies(0)) + "% accuracy", i)
       }
 
       log("training", i)
       val syncInterval = 10
-      trainPartitionSizes.zipPartitions(trainMinibatchRDD) (
+
+      trainPartitionSizes.zipPartitions(trainMiniBatchRDD) (
         (lenIt, trainMinibatchIt) => {
           assert(lenIt.hasNext && trainMinibatchIt.hasNext)
           val len = lenIt.next
           assert(!lenIt.hasNext)
-          val minibatchSampler = new MinibatchSampler(trainMinibatchIt, len, syncInterval)
-          net.setTrainData(minibatchSampler, None)
+          val miniBatchSampler = new MiniBatchSampler(trainMinibatchIt, len, syncInterval)
+          net.setTrainData(miniBatchSampler, None)
+          //we synchronize the parameter for every syncInterval iterations
           net.train(syncInterval)
           Array(0).iterator
         }
-      ).foreachPartition(_ => ())
+      ).foreachPartition(_ => ()) // trigger a job
 
       log("collecting weights", i)
-      netWeights = workers.map(_ => { net.getWeights() }).reduce((a, b) => WeightCollection.add(a, b))
+      netWeights = partitions.map(_ => { net.getWeights() }).reduce((a, b) => WeightCollection.add(a, b))
       netWeights.scalarDivide(1F * numWorkers)
       i += 1
     }
