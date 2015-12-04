@@ -10,10 +10,12 @@ class MiniBatchSampler(minibatchIt: Iterator[(Array[ByteImage], Array[Int])], to
   // because incrementing the iterator in one callback will increment it in the
   // other callback as well, since they are the same object.
 
-  // totalNumBatches = minibatchIt.length (but we can't call minibatchIt.length because that would consume the entire iterator)
+  // totalNumBatches = minibatchIt.length (but we can't call minibatchIt.length because that would consume the
+  // entire iterator)
   // numSampledBatches is the number of minibatches that we subsample from minibatchIt
 
-  var it = minibatchIt // we need to update the iterator by calling it.drop, and we need it to be a var to do this
+  var it = minibatchIt
+  // we need to update the iterator by calling it.drop, and we need it to be a var to do this
   val r = scala.util.Random
   val startIdx = r.nextInt(totalNumBatches - numSampledBatches + 1)
   val indices = Array.range(startIdx, startIdx + numSampledBatches)

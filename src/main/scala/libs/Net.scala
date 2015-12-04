@@ -66,10 +66,10 @@ class CaffeNet(state: Pointer, library: CaffeLibrary) extends Net {
   val layerNumBlobs = List.range(0, numLayers).map(i => library.num_layer_weights(state, i))
 
   // store callbacks to save them from garbage collection
-  var imageTrainCallback : Option[CaffeLibrary.java_callback_t] = None
-  var labelTrainCallback : Option[CaffeLibrary.java_callback_t] = None
-  var imageTestCallback : Option[CaffeLibrary.java_callback_t] = None
-  var labelTestCallback : Option[CaffeLibrary.java_callback_t] = None
+  var imageTrainCallback: Option[CaffeLibrary.java_callback_t] = None
+  var labelTrainCallback: Option[CaffeLibrary.java_callback_t] = None
+  var imageTestCallback: Option[CaffeLibrary.java_callback_t] = None
+  var labelTestCallback: Option[CaffeLibrary.java_callback_t] = None
 
   val dtypeSize: Int = library.get_dtype_size()
   val intSize: Int = library.get_int_size()
